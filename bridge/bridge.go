@@ -30,7 +30,6 @@ func New(adapterURI string, config Config) (*Bridge, error) {
 		return nil, errors.New("bad adapter uri: " + adapterURI)
 	}
 
-	log.Infof("%v", AdapterFactories.All())
 	factory, found := AdapterFactories.Lookup(uri.Scheme)
 	if !found {
 		return nil, errors.New("unreconized adapter: " + adapterURI)

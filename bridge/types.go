@@ -38,8 +38,6 @@ type Service struct {
 	TTL   int
 }
 
-// extention points
-
 var registry = struct {
 	sync.Mutex
 	extpoints map[string]*extensionPoint
@@ -116,7 +114,6 @@ func implements(component interface{}) []string {
 	return ifaces
 }
 
-// Register register implement to exist extension points
 func Register(component interface{}, name string) []string {
 	registry.Lock()
 	defer registry.Unlock()
@@ -129,7 +126,6 @@ func Register(component interface{}, name string) []string {
 	return ifaces
 }
 
-// Unregister unregister implement from extension points
 func Unregister(name string) []string {
 	registry.Lock()
 	defer registry.Unlock()

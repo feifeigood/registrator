@@ -24,7 +24,7 @@ func init() {
 
 type Factory struct{}
 
-func (f *Factory) New(uri url.URL) bridge.RegistryAdapter {
+func (f *Factory) New(uri *url.URL) bridge.RegistryAdapter {
 	config := consulapi.DefaultConfig()
 	if uri.Scheme == "consul-unix" {
 		config.Address = strings.TrimPrefix(uri.String(), "consul-")

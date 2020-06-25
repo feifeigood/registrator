@@ -14,6 +14,7 @@ import (
 
 	nested "github.com/antonfisher/nested-logrus-formatter"
 	"github.com/feifeigood/registrator/bridge"
+	"github.com/feifeigood/registrator/consul"
 	"github.com/fsnotify/fsnotify"
 	"github.com/sirupsen/logrus"
 )
@@ -51,6 +52,7 @@ func failOnError(err error) {
 }
 
 func main() {
+	_ = consul.Factory{}
 	flag.Usage = func() {
 		fmt.Fprintf(os.Stderr, "Usage of %s:\n", os.Args[0])
 		fmt.Fprintf(os.Stderr, "  %s [options] <registry URI>\n\n", os.Args[0])
