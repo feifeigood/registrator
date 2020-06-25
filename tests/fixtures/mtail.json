@@ -1,0 +1,14 @@
+{
+    "name": "mtail",
+    "port": 3903,
+    "tags": [
+        "exporter",
+        "log",
+        "version=3.0.0"
+    ],
+    "attrs": {
+        "region": "asia",
+        "country": "india",
+        "city": "mumbai"
+    }
+}

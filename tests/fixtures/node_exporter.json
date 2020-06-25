@@ -1,0 +1,15 @@
+{
+    "name": "node_exporter",
+    "port": 9100,
+    "tags": [
+        "exporter",
+        "linux",
+        "version=1.0.0"
+    ],
+    "attrs": {
+        "region": "asia",
+        "country": "china",
+        "province": "jiangsu",
+        "city": "nantong"
+    }
+}

@@ -17,7 +17,7 @@ const DefaultInterval = "10s"
 
 func init() {
 	f := new(Factory)
-	log.Infof("%v", bridge.Register(f, "consul"))
+	bridge.Register(f, "consul")
 	bridge.Register(f, "consul-tls")
 	bridge.Register(f, "consul-unix")
 }
