@@ -35,6 +35,7 @@ var retryAttempts = flag.Int("retry-attempts", 0, "max retry attempts to establi
 var retryInterval = flag.Int("retry-interval", 2000, "interval (in millisecond) between retry-attempts")
 var resyncInterval = flag.Int("resync", 0, "frequency with which services are resynchronized")
 var hostIP = flag.String("ip", "", "ip for ports mapped to the host")
+var cleanup = flag.Bool("cleanup", false, "remove dangling services")
 
 var log = logrus.WithField("component", "main")
 
@@ -82,7 +83,7 @@ func main() {
 	}
 
 	if *hostIP != "" {
-		log.Infof("using host IP to %s", *hostIP)
+		log.Infof("Using host IP to %s", *hostIP)
 	}
 
 	if (*refreshInterval > 0 && *refreshTTL == 0) || (*refreshInterval == 0 && *refreshTTL > 0) {
@@ -101,6 +102,8 @@ func main() {
 		HostIP:          *hostIP,
 		RefreshInterval: *refreshInterval,
 		RefreshTTL:      *refreshTTL,
+		ConfDir:         *confdir,
+		Cleanup:         *cleanup,
 	})
 
 	failOnError(err)
@@ -137,7 +140,7 @@ func main() {
 				if !ok {
 					return
 				}
-				log.Infof("event: %v", event)
+				log.Debugf("fsnotify event: %v", event)
 				if event.Op&fsnotify.Create == fsnotify.Create {
 					b.Add(event.Name)
 				} else if event.Op&fsnotify.Remove == fsnotify.Remove {

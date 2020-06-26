@@ -25,6 +25,8 @@ type Config struct {
 	HostIP          string
 	RefreshTTL      int
 	RefreshInterval int
+	ConfDir         string
+	Cleanup         bool
 }
 
 // Service registry service definition structure
