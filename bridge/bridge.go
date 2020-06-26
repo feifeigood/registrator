@@ -8,7 +8,9 @@ import (
 	"io/ioutil"
 	"net/url"
 	"os"
+	"path/filepath"
 	"regexp"
+	"strings"
 	"sync"
 
 	"github.com/sirupsen/logrus"
@@ -118,9 +120,9 @@ func (b *Bridge) Sync(quiet bool) {
 				// ignore because registered on a different host
 				continue
 			}
-			signature := matches[2]
+			rid := matches[2]
 			for i := range b.services {
-				if signature == serviceIDPattern.FindStringSubmatch(i)[2] {
+				if rid == serviceIDPattern.FindStringSubmatch(i)[2] {
 					continue Outer
 				}
 			}
@@ -137,62 +139,92 @@ func (b *Bridge) Sync(quiet bool) {
 
 func (b *Bridge) add(path string, quiet bool) {
 	service := b.newService(path)
+
+	if b.hasRID(path) {
+		// path already register, igonred
+		b.services[service.ID] = service
+		return
+	}
+
 	if service == nil {
 		if !quiet {
-			log.Warnf("register %s had some error occured, ignored", path)
+			log.Warnf("new service with file %s failed, ignored", path)
 		}
 		return
 	}
 	err := b.registry.Register(service)
 	if err != nil {
-		log.Errorf("register %s failed: %v", path, err)
+		log.Errorf("register service failed: %v", err)
 		return
 	}
 
+	// rename service file
+	rid := serviceIDPattern.FindStringSubmatch(service.ID)[2]
+	newpath := fmt.Sprintf("%s-rid%s.json", strings.TrimSuffix(path, filepath.Ext(path)), rid)
+	os.Rename(path, newpath)
+
 	b.services[service.ID] = service
-	log.Infof("added: %s %s", path, service.ID)
+	log.Infof("added: %s %s", newpath, service.ID)
+}
+
+var rIDPattern = regexp.MustCompile(`^.+-rid(.+?)$`)
+
+func (b *Bridge) hasRID(path string) bool {
+	fn := strings.TrimSuffix(filepath.Base(path), filepath.Ext(path))
+	matches := rIDPattern.FindStringSubmatch(fn)
+	return len(matches) == 2
 }
 
 func (b *Bridge) remove(path string) {
 	b.Lock()
 	defer b.Unlock()
 
-	singature := b.signature(path)
-	for i, svc := range b.services {
-		matches := serviceIDPattern.FindStringSubmatch(i)
+	if !b.hasRID(path) {
+		return
+	}
+
+	rid := rIDPattern.FindStringSubmatch(strings.TrimSuffix(filepath.Base(path), filepath.Ext(path)))[1]
+
+	for id, svc := range b.services {
+		matches := serviceIDPattern.FindStringSubmatch(id)
 		if len(matches) != 3 {
 			// There's no way this was registered by us, so leave it
 			continue
 		}
 
-		if singature != matches[2] {
+		if rid != matches[2] {
 			continue
 		}
 
-		log.Infof("removed: %s %s", path, i)
+		log.Infof("removed: %s %s", path, id)
 
 		b.registry.Deregister(svc)
-		delete(b.services, i)
+		delete(b.services, id)
 	}
 }
 
 func (b *Bridge) newService(path string) *Service {
+	service := new(Service)
 	bytes, err := ioutil.ReadFile(path)
 	if err != nil {
-		log.Errorf("read %s: %v", path, err)
+		log.Errorf("read service definition config %s failed: %v", path, err)
 		return nil
 	}
-	svc := new(Service)
-	if err = json.Unmarshal(bytes, svc); err != nil {
-		log.Errorf("parse %s: %v", path, err)
+	if err = json.Unmarshal(bytes, service); err != nil {
+		log.Errorf("parse service definition config %s failed: %v", path, err)
 		return nil
+	}
+
+	rid := GenerateRandomID()
+	if b.hasRID(path) {
+		rid = rIDPattern.FindStringSubmatch(strings.TrimSuffix(filepath.Base(path), filepath.Ext(path)))[1]
 	}
 
 	hostname := Hostname
-	svc.ID = fmt.Sprintf("[%s]:%s:%d", hostname, b.signature(path), svc.Port)
-	svc.TTL = b.config.RefreshTTL
+	service.ID = fmt.Sprintf("[%s]:%s:%d", hostname, rid, service.Port)
+	service.TTL = b.config.RefreshTTL
 
-	return svc
+	return service
 }
 
 func (b *Bridge) signature(path string) string {

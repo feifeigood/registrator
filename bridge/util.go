@@ -1,8 +1,12 @@
 package bridge
 
 import (
+	"crypto/rand"
+	"encoding/hex"
+	"io"
 	"os"
 	"path/filepath"
+	"strconv"
 )
 
 func Contains(x []string, y string) bool {
@@ -66,4 +70,32 @@ func recursiveLookup(root string, pattern string, dirsLookup bool) ([]string, er
 	}
 
 	return result, nil
+}
+
+const shortLen = 12
+
+func TruncateID(id string) string {
+	trimTo := shortLen
+	if len(id) < shortLen {
+		trimTo = len(id)
+	}
+	return id[:trimTo]
+}
+
+func GenerateRandomID() string {
+	b := make([]byte, 32)
+	var r io.Reader = rand.Reader
+	for {
+		if _, err := io.ReadFull(r, b); err != nil {
+			panic(err)
+		}
+		id := hex.EncodeToString(b)
+
+		if _, err := strconv.ParseInt(TruncateID(id), 10, 64); err == nil {
+			continue
+		}
+
+		// return short id
+		return id[:12]
+	}
 }

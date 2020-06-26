@@ -130,6 +130,10 @@ func main() {
 	failOnError(err)
 	defer watcher.Close()
 
+	quit := make(chan os.Signal, 1)
+	stop := make(chan struct{})
+	wg := &sync.WaitGroup{}
+
 	b.Sync(false)
 
 	log.Infof("listening for fsnotify events ...")
@@ -140,26 +144,27 @@ func main() {
 				if !ok {
 					return
 				}
-				if event.Op&fsnotify.Create == fsnotify.Create {
+
+				switch event.Op {
+				case fsnotify.Create:
 					b.Add(event.Name)
-				} else if event.Op&fsnotify.Remove == fsnotify.Remove {
+				case fsnotify.Remove:
 					b.Remove(event.Name)
+				default:
+					log.Debugf("received fsnotify event: %v, ignored", event)
 				}
+
 			case err, ok := <-watcher.Errors:
 				if !ok {
 					return
 				}
-				log.Errorf("%v", err)
+				log.Errorf("fsnotify watcher failed: %v", err)
 			}
 		}
 	}()
 
 	err = watcher.Add(*confdir)
 	failOnError(err)
-
-	quit := make(chan os.Signal, 1)
-	stop := make(chan struct{})
-	wg := &sync.WaitGroup{}
 
 	// Start the TTL refresh timer
 	if *refreshInterval > 0 {
