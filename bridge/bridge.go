@@ -38,7 +38,7 @@ func New(adapterURI string, config Config) (*Bridge, error) {
 		return nil, errors.New("unreconized adapter: " + adapterURI)
 	}
 
-	log.Infof("Using %s adapter: %s", uri.Scheme, adapterURI)
+	log.Infof("using %s adapter: %s", uri.Scheme, adapterURI)
 	return &Bridge{
 		config:   config,
 		registry: factory.New(uri),
@@ -75,13 +75,13 @@ func (b *Bridge) Sync(quiet bool) {
 
 	paths, err := RecursiveFilesLookup(b.config.ConfDir, "*json")
 	if err != nil && quiet {
-		log.Errorf("Recursive lookup confdir failed: %v", err)
+		log.Errorf("recursive lookup confdir failed: %v", err)
 		return
 	} else if err != nil && !quiet {
 		log.Fatal(err)
 	}
 
-	log.Infof("Syncing services on %d files", len(paths))
+	log.Infof("syncing services on %d files", len(paths))
 
 	registered := []string{}
 
@@ -93,7 +93,7 @@ func (b *Bridge) Sync(quiet bool) {
 		} else {
 			err := b.registry.Register(service)
 			if err != nil {
-				log.Errorf("Sync register failed: %v %v", service, err)
+				log.Errorf("sync register failed: %v %v", service, err)
 			}
 		}
 	}
@@ -139,18 +139,18 @@ func (b *Bridge) add(path string, quiet bool) {
 	service := b.newService(path)
 	if service == nil {
 		if !quiet {
-			log.Warnf("Register %s had some error occured, ignored", path)
+			log.Warnf("register %s had some error occured, ignored", path)
 		}
 		return
 	}
 	err := b.registry.Register(service)
 	if err != nil {
-		log.Errorf("Register %s failed: %v", path, err)
+		log.Errorf("register %s failed: %v", path, err)
 		return
 	}
 
 	b.services[service.ID] = service
-	log.Infof("Added: %s %s", path, service.ID)
+	log.Infof("added: %s %s", path, service.ID)
 }
 
 func (b *Bridge) remove(path string) {
@@ -179,12 +179,12 @@ func (b *Bridge) remove(path string) {
 func (b *Bridge) newService(path string) *Service {
 	bytes, err := ioutil.ReadFile(path)
 	if err != nil {
-		log.Errorf("Read %s: %v", path, err)
+		log.Errorf("read %s: %v", path, err)
 		return nil
 	}
 	svc := new(Service)
 	if err = json.Unmarshal(bytes, svc); err != nil {
-		log.Errorf("Parse %s: %v", path, err)
+		log.Errorf("parse %s: %v", path, err)
 		return nil
 	}
 

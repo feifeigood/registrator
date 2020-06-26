@@ -14,9 +14,11 @@ import (
 
 	nested "github.com/antonfisher/nested-logrus-formatter"
 	"github.com/feifeigood/registrator/bridge"
-	"github.com/feifeigood/registrator/consul"
 	"github.com/fsnotify/fsnotify"
 	"github.com/sirupsen/logrus"
+
+	_ "github.com/feifeigood/registrator/consul"
+	_ "github.com/feifeigood/registrator/consulkv"
 )
 
 const app = "registrator"
@@ -53,7 +55,6 @@ func failOnError(err error) {
 }
 
 func main() {
-	_ = consul.Factory{}
 	flag.Usage = func() {
 		fmt.Fprintf(os.Stderr, "Usage of %s:\n", os.Args[0])
 		fmt.Fprintf(os.Stderr, "  %s [options] <registry URI>\n\n", os.Args[0])
@@ -83,7 +84,7 @@ func main() {
 	}
 
 	if *hostIP != "" {
-		log.Infof("Using host IP to %s", *hostIP)
+		log.Infof("using host IP to %s", *hostIP)
 	}
 
 	if (*refreshInterval > 0 && *refreshTTL == 0) || (*refreshInterval == 0 && *refreshTTL > 0) {
@@ -96,7 +97,7 @@ func main() {
 		failOnError(errors.New("-retry-interval must be grether than 0"))
 	}
 
-	log.Infof("Starting registrator %s", Version)
+	log.Infof("starting registrator %s", Version)
 
 	b, err := bridge.New(flag.Arg(0), bridge.Config{
 		HostIP:          *hostIP,
@@ -111,7 +112,7 @@ func main() {
 	attempt := 0
 
 	for *retryAttempts == -1 || attempt <= *retryAttempts {
-		log.Infof("Connecting to backend (%v/%v)", attempt, *retryAttempts)
+		log.Infof("connecting to backend (%v/%v)", attempt, *retryAttempts)
 		err := b.Ping()
 		if err == nil {
 			break
@@ -129,10 +130,9 @@ func main() {
 	failOnError(err)
 	defer watcher.Close()
 
-	// Sync first
 	b.Sync(false)
 
-	log.Infof("Listening for fsnotify events ...")
+	log.Infof("listening for fsnotify events ...")
 	go func() {
 		for {
 			select {
@@ -140,7 +140,6 @@ func main() {
 				if !ok {
 					return
 				}
-				log.Debugf("fsnotify event: %v", event)
 				if event.Op&fsnotify.Create == fsnotify.Create {
 					b.Add(event.Name)
 				} else if event.Op&fsnotify.Remove == fsnotify.Remove {
