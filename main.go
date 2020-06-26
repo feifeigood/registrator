@@ -181,6 +181,7 @@ func main() {
 
 	// Start the resync timer if enabled
 	if *resyncInterval > 0 {
+		log.Infof("interval %v for resynchronized", time.Duration(*resyncInterval)*time.Second)
 		wg.Add(1)
 		resyncTicker := time.NewTicker(time.Duration(*resyncInterval) * time.Second)
 		go func() {
@@ -191,6 +192,7 @@ func main() {
 					b.Sync(false)
 				case <-stop:
 					resyncTicker.Stop()
+					return
 				}
 			}
 		}()
