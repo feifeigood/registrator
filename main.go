@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"os/signal"
+	"path/filepath"
 	"runtime"
 	"strings"
 	"sync"
@@ -43,8 +44,9 @@ var log = logrus.WithField("component", "main")
 
 func init() {
 	logrus.SetFormatter(&nested.Formatter{
-		HideKeys:    true,
-		FieldsOrder: []string{"component"},
+		TimestampFormat: time.RFC3339,
+		HideKeys:        true,
+		FieldsOrder:     []string{"component"},
 	})
 }
 
@@ -143,6 +145,12 @@ func main() {
 			case event, ok := <-watcher.Events:
 				if !ok {
 					return
+				}
+
+				// ignore invalid file, like vim .swap
+				log.Debugf("received fsnotify event: %v", event)
+				if filepath.Ext(event.Name) != ".json" || event.Name == bridge.StorageName {
+					continue
 				}
 
 				switch event.Op {
