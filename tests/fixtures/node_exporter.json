@@ -1,6 +1,7 @@
 {
     "name": "node_exporter",
     "port": 9100,
+    "address":"127.0.0.1",
     "tags": [
         "exporter",
         "linux",

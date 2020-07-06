@@ -1,6 +1,7 @@
 {
     "name": "mtail",
     "port": 3903,
+    "address":"127.0.0.1",
     "tags": [
         "exporter",
         "log",

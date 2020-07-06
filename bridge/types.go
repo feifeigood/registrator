@@ -32,9 +32,9 @@ type Config struct {
 // Service registry service definition structure
 type Service struct {
 	ID    string
-	Name  string `json:"name"`
-	Port  int    `json:"port"`
-	IP    string
+	Name  string            `json:"name"`
+	Port  int               `json:"port"`
+	IP    string            `json:"address"`
 	Tags  []string          `json:"tags"`
 	Attrs map[string]string `json:"attrs"`
 	TTL   int
