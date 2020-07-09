@@ -62,8 +62,6 @@ func (b *Bridge) Ping() error {
 
 // Add try to add service to backend
 func (b *Bridge) Add(path string) {
-	b.Lock()
-	defer b.Unlock()
 	b.add(path, false)
 }
 
@@ -151,6 +149,9 @@ func (b *Bridge) Sync(quiet bool) {
 }
 
 func (b *Bridge) add(path string, quiet bool) {
+	b.Lock()
+	defer b.Unlock()
+
 	service := b.newService(path)
 	if id, ok := b.store.GetServiceID(path); ok && service.ID == id {
 		log.Warnf("ignored service registry request, it's already registered path: %s, service_id: %s", path, id)
@@ -177,14 +178,6 @@ func (b *Bridge) add(path string, quiet bool) {
 
 	log.Infof("added: %s %s", path, service.ID)
 }
-
-// var rIDPattern = regexp.MustCompile(`^.+-rid(.+?)$`)
-
-// func (b *Bridge) hasRID(path string) bool {
-// 	fn := strings.TrimSuffix(filepath.Base(path), filepath.Ext(path))
-// 	matches := rIDPattern.FindStringSubmatch(fn)
-// 	return len(matches) == 2
-// }
 
 func (b *Bridge) remove(path string) {
 	b.Lock()

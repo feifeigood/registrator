@@ -39,6 +39,7 @@ var retryInterval = flag.Int("retry-interval", 2000, "interval (in millisecond) 
 var resyncInterval = flag.Int("resync", 0, "frequency with which services are resynchronized")
 var hostIP = flag.String("ip", "", "ip for ports mapped to the host")
 var cleanup = flag.Bool("cleanup", false, "remove dangling services")
+var logLevel = flag.String("log-level", "info", "Show log level")
 
 var log = logrus.WithField("component", "main")
 
@@ -54,6 +55,28 @@ func failOnError(err error) {
 	if err != nil {
 		log.Fatal(err)
 	}
+}
+
+func setupLogger() error {
+
+	switch *logLevel {
+	case "debug":
+		logrus.SetLevel(logrus.DebugLevel)
+	case "info":
+		logrus.SetLevel(logrus.InfoLevel)
+	case "warning":
+		logrus.SetLevel(logrus.WarnLevel)
+	case "error":
+		logrus.SetLevel(logrus.ErrorLevel)
+	case "fatal":
+		logrus.SetLevel(logrus.FatalLevel)
+	case "panic":
+		logrus.SetLevel(logrus.PanicLevel)
+	default:
+		return fmt.Errorf("Unknown log level '%s'", *logLevel)
+	}
+
+	return nil
 }
 
 func main() {
@@ -84,6 +107,8 @@ func main() {
 		flag.Usage()
 		os.Exit(2)
 	}
+
+	failOnError(setupLogger())
 
 	if *hostIP != "" {
 		log.Infof("using host IP to %s", *hostIP)
@@ -148,7 +173,7 @@ func main() {
 				}
 
 				// ignore invalid file, like vim .swap
-				log.Debugf("received fsnotify event: %v", event)
+				log.Debugf("fsnotify: received event: %v", event)
 				if filepath.Ext(event.Name) != ".json" || event.Name == bridge.StorageName {
 					continue
 				}
@@ -166,7 +191,7 @@ func main() {
 				if !ok {
 					return
 				}
-				log.Errorf("fsnotify watcher failed: %v", err)
+				log.Errorf("fsnotify: watcher failed: %v", err)
 			}
 		}
 	}()

@@ -84,6 +84,7 @@ func (r *ConsulAdapter) Register(service *bridge.Service) error {
 	// allow tag had been update If service tag changed
 	registration.EnableTagOverride = true
 
+	log.Debugf("consul: agent service register: %v", registration)
 	return r.client.Agent().ServiceRegister(registration)
 }
 
@@ -92,6 +93,7 @@ func (r *ConsulAdapter) buildCheck(service bridge.Service) *consulapi.AgentServi
 }
 
 func (r *ConsulAdapter) Deregister(service *bridge.Service) error {
+	log.Debugf("consul: agent service deregister id: %s", service.ID)
 	return r.client.Agent().ServiceDeregister(service.ID)
 }
 
