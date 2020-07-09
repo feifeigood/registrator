@@ -46,6 +46,19 @@ func NewStore(configdir string) (*Storage, error) {
 		return nil, err
 	}
 
+	// rebuild storage
+	rebuild := false
+	for path := range storage.Metadata {
+		info, err := os.Stat(path)
+		if os.IsNotExist(err) || info.IsDir() {
+			rebuild = true
+			delete(storage.Metadata, path)
+		}
+	}
+	if rebuild {
+		storage.flush()
+	}
+
 	return &storage, nil
 }
 
