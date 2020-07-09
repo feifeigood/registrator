@@ -62,11 +62,23 @@ func (b *Bridge) Ping() error {
 
 // Add try to add service to backend
 func (b *Bridge) Add(path string) {
+	b.Lock()
+	defer b.Unlock()
+
 	b.add(path, false)
 }
 
 // Remove try to remove service to backend
 func (b *Bridge) Remove(path string) {
+	b.remove(path)
+}
+
+// Rename try to remove service to backend If rename path has already registered
+func (b *Bridge) Rename(path string) {
+	// validate service has already registered
+	if _, ok := b.store.GetServiceID(path); !ok {
+		return
+	}
 	b.remove(path)
 }
 
@@ -99,7 +111,7 @@ func (b *Bridge) Sync(quiet bool) {
 		service := b.newService(path)
 		registered = append(registered, service.ID)
 
-		if _, ok := b.store.GetServiceID(path); !ok {
+		if sid, ok := b.store.GetServiceID(path); !ok || sid != service.ID {
 			b.add(path, quiet)
 		} else {
 			err := b.registry.Register(service)
@@ -149,9 +161,6 @@ func (b *Bridge) Sync(quiet bool) {
 }
 
 func (b *Bridge) add(path string, quiet bool) {
-	b.Lock()
-	defer b.Unlock()
-
 	service := b.newService(path)
 	if id, ok := b.store.GetServiceID(path); ok && service.ID == id {
 		log.Warnf("ignored service registry request, it's already registered path: %s, service_id: %s", path, id)

@@ -174,17 +174,19 @@ func main() {
 
 				// ignore invalid file, like vim .swap
 				log.Debugf("fsnotify: received event: %v", event)
-				if filepath.Ext(event.Name) != ".json" || event.Name == bridge.StorageName {
+				if filepath.Ext(event.Name) != ".json" || filepath.Base(event.Name) == bridge.StorageName {
 					continue
 				}
 
-				switch event.Op {
-				case fsnotify.Create:
+				switch {
+				case event.Op&fsnotify.Create == fsnotify.Create || event.Op&fsnotify.Write == fsnotify.Write:
 					b.Add(event.Name)
-				case fsnotify.Remove:
+				case event.Op&fsnotify.Rename == fsnotify.Rename:
+					b.Rename(event.Name)
+				case event.Op&fsnotify.Rename == fsnotify.Remove:
 					b.Remove(event.Name)
 				default:
-					log.Debugf("received fsnotify event: %v, ignored", event)
+					log.Debugf("fsnotify: ignore event: %v", event)
 				}
 
 			case err, ok := <-watcher.Errors:
