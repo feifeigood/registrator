@@ -179,8 +179,10 @@ func main() {
 				}
 
 				switch {
-				case event.Op&fsnotify.Create == fsnotify.Create || event.Op&fsnotify.Write == fsnotify.Write:
+				case event.Op&fsnotify.Create == fsnotify.Create:
 					b.Add(event.Name)
+				case event.Op&fsnotify.Write == fsnotify.Write:
+					b.Update(event.Name)
 				case event.Op&fsnotify.Rename == fsnotify.Rename:
 					b.Rename(event.Name)
 				case event.Op&fsnotify.Rename == fsnotify.Remove:

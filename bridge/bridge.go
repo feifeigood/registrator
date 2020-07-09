@@ -82,6 +82,12 @@ func (b *Bridge) Rename(path string) {
 	b.remove(path)
 }
 
+// Update try to update service to backend
+func (b *Bridge) Update(path string) {
+	b.Remove(path)
+	b.Add(path)
+}
+
 // Refresh refresh service registry ttl
 func (b *Bridge) Refresh() {
 
