@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/url"
-	"os"
 	"path/filepath"
 	"regexp"
 	"sync"
@@ -142,8 +141,8 @@ func (b *Bridge) Sync(quiet bool) {
 				continue
 			}
 
-			hostname := matches[1]
-			if hostname != Hostname {
+			identifier := matches[1]
+			if identifier != HardwareID {
 				// ignore because registered on a different host
 				continue
 			}
@@ -219,8 +218,7 @@ func (b *Bridge) newService(path string) *Service {
 		return nil
 	}
 
-	hostname := Hostname
-	service.ID = fmt.Sprintf("[%s]:%s:%d", hostname, b.signature(configBytes), service.Port)
+	service.ID = fmt.Sprintf("[%s]:%s:%d", HardwareID, b.signature(configBytes), service.Port)
 	service.TTL = b.config.RefreshTTL
 
 	return service
@@ -231,8 +229,13 @@ func (b *Bridge) signature(bytes []byte) string {
 	return fmt.Sprintf("%x", bs)
 }
 
-var Hostname string
+// HardwareID node identifier by main board SN
+var HardwareID string
 
 func init() {
-	Hostname, _ = os.Hostname()
+	bs, err := ioutil.ReadFile("/sys/class/dmi/id/board_serial")
+	if err != nil {
+		panic(fmt.Sprintf("couldn't get main board SN from /sys/class/dmi/id/board_serial: %s", err.Error()))
+	}
+	HardwareID = string(bs)
 }

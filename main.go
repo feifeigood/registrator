@@ -19,7 +19,6 @@ import (
 	"github.com/sirupsen/logrus"
 
 	_ "github.com/feifeigood/registrator/consul"
-	_ "github.com/feifeigood/registrator/consulkv"
 )
 
 const app = "registrator"
