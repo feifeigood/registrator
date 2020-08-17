@@ -9,6 +9,7 @@ import (
 	"net/url"
 	"path/filepath"
 	"regexp"
+	"strings"
 	"sync"
 
 	"github.com/sirupsen/logrus"
@@ -237,5 +238,5 @@ func init() {
 	if err != nil {
 		panic(fmt.Sprintf("couldn't get main board SN from /sys/class/dmi/id/board_serial: %s", err.Error()))
 	}
-	HardwareID = string(bs)
+	HardwareID = strings.TrimSuffix(string(bs), "\n")
 }
